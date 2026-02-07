@@ -139,17 +139,6 @@ body{
 }
 .heart.clickable{ cursor:pointer; }
 
-/* ✅ сердце на 2 экране чуть правее */
-#screen2 .heart-wrap{
-  width:100%;
-  display:flex;
-  justify-content:center;
-}
-#bigHeart{
-  position:relative;
-  left:22px; /* ← двигай 10..40px */
-}
-
 .heart:before,
 .heart:after{
   content:"";
@@ -232,41 +221,6 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
 }
 .msg.show{ opacity:1; }
 
-/* ✅ фикс: hint появляется без сдвигов (место зарезервировано) */
-.hint-slot{
-  height:22px;               /* резерв под 1 строку */
-  margin-top:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.hint{
-  font-size:14px;
-  opacity:0;
-  transform: translateY(14px);
-  filter: blur(2px);
-  pointer-events:none;
-}
-
-/* ✅ 2 экран: ПЛАВНОЕ появление текста (без резкого “прыжка”) */
-#screen2 .s2-appear{
-  opacity:0;
-  transform: translateY(14px);
-  filter: blur(2px);
-}
-#screen2.on .s2-appear,
-#screen2.on .hint{
-  opacity:1;
-  transform: translateY(0);
-  filter: blur(0);
-  transition:
-    opacity 900ms ease,
-    transform 900ms cubic-bezier(.18,.85,.18,1),
-    filter 900ms ease;
-}
-#screen2.on .hint{ opacity:.72; }
-
 /* ====== CANVAS ====== */
 #fx{
   position:fixed;
@@ -283,6 +237,71 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
   transition: opacity 600ms ease;
 }
 #heartsFx.show{ opacity:1; }
+
+/* =========================
+   ✅ SCREEN 2: ровняем + плавно показываем
+   - опускаем весь контент вниз
+   - плавный апир текста/эмодзи/хинта
+   - хинт не двигает ничего (место зарезервировано)
+========================= */
+#screen2{
+  justify-content:flex-start;
+  padding-top:34px;          /* <- "опусти всё ниже" */
+}
+
+#screen2 .heart-wrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin-bottom:26px;
+}
+
+/* ✅ сердечко чуть левее и "по центру" визуально */
+#bigHeart{
+  position:relative;
+  left:10px;                 /* было 22px, теперь ближе к центру */
+}
+
+/* ✅ резерв под мелкий текст, чтобы ничего не ехало */
+.hint-slot{
+  height:22px;
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ✅ стартовые состояния для плавного появления */
+#screen2 .s2-appear,
+#screen2 .hint{
+  opacity:0;
+  transform: translateY(14px);
+  filter: blur(2px);
+  will-change: opacity, transform, filter;
+}
+
+/* отдельное правило, чтобы msg2 не "щелкал" из-за .msg transition */
+#screen2 .msg.s2-appear{
+  transition: opacity 950ms ease, transform 950ms ease, filter 950ms ease;
+}
+#screen2 h1.s2-appear{
+  transition: opacity 950ms ease, transform 950ms ease, filter 950ms ease;
+}
+#screen2 .hint{
+  transition: opacity 950ms ease, transform 950ms ease, filter 950ms ease;
+  pointer-events:none;
+  font-size:14px;
+}
+
+/* ✅ включение */
+#screen2.on .s2-appear,
+#screen2.on .hint{
+  opacity:1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+#screen2.on .hint{ opacity:.72; }
 </style>
 </head>
 
@@ -314,7 +333,7 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
       <div class="heart clickable" id="bigHeart" aria-label="Большое сердце"></div>
     </div>
 
-    <!-- ❗ без inline opacity и без class="show" — чтобы НЕ было резкого появления -->
+    <!-- ✅ УБРАЛ inline opacity и show, чтобы не было резкого появления -->
     <h1 class="big s2-appear" id="title2">Урааа! 💘 Теперь ты моя валентинка!</h1>
     <div class="msg s2-appear" id="msg2">🥰💞🥰</div>
 
@@ -518,9 +537,6 @@ function showScreen(n){
 }
 
 async function transitionToScreen3(){
-  // на всякий — чтобы при возвратах не было “включено”
-  screen2.classList.remove('on');
-
   card.classList.remove('spin-in');
   card.classList.add('spin-out');
   await sleep(1650);
@@ -636,13 +652,17 @@ yesBtn.onclick = async () => {
     tickConfetti();
   }
 
+  // переключаемся на экран 2
   await sleep(350);
+
+  // на всякий случай сброс, чтобы повторно не "щелкало"
+  screen2.classList.remove('on');
+
   showScreen(2);
 
-  // ✅ плавно показываем весь контент 2-го экрана
-  screen2.classList.remove('on'); // на всякий случай
+  // ✅ включаем анимацию появления ПЛАВНО
   requestAnimationFrame(() => {
-    // второй кадр — чтобы браузер точно успел применить стартовые стили
+    // второй rAF помогает, чтобы браузер точно успел применить стартовые стили
     requestAnimationFrame(() => screen2.classList.add('on'));
   });
 };
