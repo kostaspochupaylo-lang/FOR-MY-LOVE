@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Открытка 💘</title>
 
 <style>
@@ -16,7 +16,8 @@
   --shadow: 0 22px 70px rgba(0,0,0,.16);
 }
 
-*{box-sizing:border-box;}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
 
 body{
   margin:0;
@@ -61,10 +62,11 @@ body{
   position:relative;
   text-align:center;
 
-  /* карточка тоже после паузы и дольше */
+  /* карточка после паузы и дольше */
   opacity:0;
   transform: translateY(28px) scale(.975);
   animation: cardIn 1100ms cubic-bezier(.2,.9,.2,1) 600ms both;
+  transform-style: preserve-3d;
 }
 
 @keyframes cardIn{
@@ -81,13 +83,41 @@ body{
   pointer-events:none;
 }
 
-/* ====== СЕРДЦЕ (первым) ====== */
+.card.spin-out{
+  animation: spinOut 950ms cubic-bezier(.2,.9,.2,1) both;
+}
+@keyframes spinOut{
+  0%{ opacity:1; transform: translateY(0) rotate(0deg) scale(1); filter: blur(0); }
+  55%{ opacity:1; transform: translateY(0) rotate(320deg) scale(.9); filter: blur(1px); }
+  100%{ opacity:0; transform: translateY(0) rotate(720deg) scale(.82); filter: blur(6px); }
+}
+
+.card.spin-in{
+  animation: spinIn 1100ms cubic-bezier(.2,.9,.2,1) both;
+}
+@keyframes spinIn{
+  0%{ opacity:0; transform: translateY(0) rotate(-540deg) scale(.82); filter: blur(7px); }
+  60%{ opacity:1; transform: translateY(0) rotate(10deg) scale(1.01); filter: blur(0); }
+  100%{ opacity:1; transform: translateY(0) rotate(0deg) scale(1); filter: blur(0); }
+}
+
+/* ====== ЭКРАНЫ ====== */
+.screen{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.hidden{ display:none; }
+
+/* ====== СЕРДЦЕ ====== */
 .heart-wrap{
   margin-bottom:20px;
 
   opacity:0;
   transform: translateY(-10px) scale(.88);
-  animation: popIn 700ms cubic-bezier(.2,.9,.2,1) 1300ms both; /* после появления карточки */
+  animation: popIn 700ms cubic-bezier(.2,.9,.2,1) 1300ms both;
 }
 
 @keyframes popIn{
@@ -103,9 +133,12 @@ body{
   transform:rotate(45deg);
   position:relative;
   border-radius:20px;
-
-  /* пульсация */
   animation:pulse 1.2s infinite;
+  cursor: default;
+}
+
+.heart.clickable{
+  cursor:pointer;
 }
 
 .heart:before,
@@ -118,28 +151,26 @@ body{
   position:absolute;
 }
 
-.heart:before{left:-75px;top:0;}
-.heart:after{top:-75px;left:0;}
+.heart:before{ left:-75px; top:0; }
+.heart:after { top:-75px; left:0; }
 
 @keyframes pulse{
-  0%,100%{transform:rotate(45deg) scale(1);}
-  50%{transform:rotate(45deg) scale(1.06);}
+  0%,100%{ transform:rotate(45deg) scale(1); }
+  50%{ transform:rotate(45deg) scale(1.06); }
 }
 
-/* ====== ТЕКСТ (печатание, вторым) ====== */
+/* ====== ТЕКСТ (печатание) ====== */
 h1{
   font-size:clamp(26px,3vw,40px);
-  margin:0 0 25px;
+  margin:0 0 18px;
   line-height:1.2;
-
-  opacity:0; /* покажем когда начнем печатать */
+  opacity:0;
 }
 
 h1.big{
   font-size:clamp(34px,4.5vw,56px);
 }
 
-/* мигающий курсор при печатании */
 .typing-caret::after{
   content:"";
   display:inline-block;
@@ -150,12 +181,9 @@ h1.big{
   transform: translateY(2px);
   animation: caretBlink .75s steps(1) infinite;
 }
+@keyframes caretBlink{ 50%{ opacity:0; } }
 
-@keyframes caretBlink{
-  50%{ opacity:0; }
-}
-
-/* ====== КНОПКИ (третьим) ====== */
+/* ====== КНОПКИ ====== */
 .buttons{
   display:flex;
   gap:16px;
@@ -164,7 +192,6 @@ h1.big{
   transform: translateY(10px);
   pointer-events:none;
 }
-
 .buttons.show{
   opacity:1;
   transform: translateY(0);
@@ -182,29 +209,30 @@ h1.big{
   box-shadow:0 14px 28px rgba(0,0,0,.12);
   transition:transform .2s, filter .2s;
 }
-
 .btn:active{ transform:scale(.96); }
 
-#yes{
-  background:var(--yes);
-  color:#053c35;
-}
-
+#yes{ background:var(--yes); color:#053c35; }
 #no{
   background:#ff5a7d;
   color:#fff;
   transition:transform .3s cubic-bezier(.2,.8,.2,1);
 }
 
-/* ====== СООБЩЕНИЕ ====== */
+/* ====== СООБЩЕНИЕ / ПОДСКАЗКА ====== */
 .msg{
-  margin-top:20px;
+  margin-top:16px;
   font-size:30px;
   font-weight:900;
   opacity:0;
   transition:.4s;
 }
 .msg.show{ opacity:1; }
+
+.hint{
+  margin-top:14px;
+  font-size:14px;
+  opacity:.72;
+}
 
 /* ====== КОНФЕТТИ ====== */
 #fx{
@@ -213,48 +241,99 @@ h1.big{
   pointer-events:none;
   z-index:999;
 }
+
+/* ====== 3-й экран: летающие сердечки ====== */
+#heartsFx{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index: 998; /* под конфетти, но над фоном */
+  opacity:0;
+  transition: opacity 600ms ease;
+}
+#heartsFx.show{ opacity:1; }
 </style>
 </head>
 
 <body>
 <canvas id="fx"></canvas>
+<canvas id="heartsFx"></canvas>
 
-<div class="card">
-  <div class="heart-wrap">
-    <div class="heart"></div>
+<div class="card" id="card">
+
+  <!-- SCREEN 1 -->
+  <div class="screen" id="screen1">
+    <div class="heart-wrap">
+      <div class="heart" aria-hidden="true"></div>
+    </div>
+
+    <h1 id="title1">Принцесска, ты будешь моей валентинкой?</h1>
+
+    <div class="buttons" id="buttons1">
+      <button class="btn" id="yes">Да</button>
+      <button class="btn" id="no">Нет</button>
+    </div>
+
+    <div class="msg" id="msg1"></div>
   </div>
 
-  <h1 id="title">Принцесска, ты будешь моей валентинкой?</h1>
+  <!-- SCREEN 2 -->
+  <div class="screen hidden" id="screen2">
+    <div class="heart-wrap" style="opacity:1; transform:none; animation:none;">
+      <div class="heart clickable" id="bigHeart" aria-label="Большое сердце"></div>
+    </div>
 
-  <div class="buttons" id="buttons">
-    <button class="btn" id="yes">Да</button>
-    <button class="btn" id="no">Нет</button>
+    <h1 class="big" id="title2">Урааа! 💘 Теперь ты моя валентинка!</h1>
+    <div class="msg show" id="msg2">🥰💞🥰</div>
+    <div class="hint" id="hint2">жмякни на большое сердечко</div>
   </div>
 
-  <div class="msg" id="msg"></div>
+  <!-- SCREEN 3 -->
+  <div class="screen hidden" id="screen3">
+    <div class="heart-wrap" style="opacity:1; transform:none; animation:none;">
+      <div class="heart" aria-hidden="true"></div>
+    </div>
+
+    <h1 class="big" id="title3" style="opacity:1;">Люблю тебя 💖</h1>
+    <div class="msg show" id="msg3">💘💘💘</div>
+  </div>
+
 </div>
 
 <script>
-/* ===== ПЕЧАТАНИЕ ТЕКСТА (появляется после сердца) ===== */
-const titleEl = document.getElementById('title');
-const buttons = document.getElementById('buttons');
+/* =========================
+   Screen 1: typing sequence
+========================= */
+const card = document.getElementById('card');
 
-const fullText = titleEl.textContent;
-titleEl.textContent = "";
-titleEl.style.opacity = "1";
+const screen1 = document.getElementById('screen1');
+const screen2 = document.getElementById('screen2');
+const screen3 = document.getElementById('screen3');
+
+const title1 = document.getElementById('title1');
+const buttons1 = document.getElementById('buttons1');
+const msg1 = document.getElementById('msg1');
+
+const yesBtn = document.getElementById('yes');
+const noBtn = document.getElementById('no');
+
+const bigHeart = document.getElementById('bigHeart');
+
+const fullText1 = title1.textContent;
+title1.textContent = "";
+title1.style.opacity = "1";
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
 function typeText(el, text, speed = 45){
   return new Promise((resolve) => {
     let i = 0;
     el.classList.add('typing-caret');
-
     const timer = setInterval(() => {
       el.textContent += text[i];
       i++;
-
       if(i >= text.length){
         clearInterval(timer);
-        // небольшой “дочит” перед показом кнопок
         setTimeout(() => {
           el.classList.remove('typing-caret');
           resolve();
@@ -266,21 +345,18 @@ function typeText(el, text, speed = 45){
 
 // Пауза → сердце уже появилось по CSS → затем печатание → затем кнопки
 (async () => {
-  // дождемся пока карточка/сердце проявятся (совпадает с таймингами CSS)
-  await new Promise(r => setTimeout(r, 1500));
-  await typeText(titleEl, fullText, 45);
-  buttons.classList.add('show');
+  await sleep(1500);
+  await typeText(title1, fullText1, 45);
+  buttons1.classList.add('show');
 })();
 
-/* ===== УБЕГАЮЩАЯ КНОПКА (без изменений по смыслу) ===== */
-const noBtn = document.getElementById('no');
-const yesBtn = document.getElementById('yes');
-const msg = document.getElementById('msg');
-
+/* =========================
+   "Нет" убегает (как было)
+========================= */
 let nx=0, ny=0;
 function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
 
-buttons.addEventListener('mousemove', e=>{
+buttons1.addEventListener('mousemove', e=>{
   const rect = noBtn.getBoundingClientRect();
   const cx = rect.left + rect.width/2;
   const cy = rect.top + rect.height/2;
@@ -325,28 +401,30 @@ noBtn.addEventListener('touchstart', (e) => {
   noBtn.style.transform = `translate(${nx}px,${ny}px)`;
 }, { passive:false });
 
-/* ===== САЛЮТ (без изменений по логике) ===== */
-const canvas=document.getElementById('fx');
-const ctx=canvas.getContext('2d');
+/* =========================
+   Confetti (как было)
+========================= */
+const fx = document.getElementById('fx');
+const ctx = fx.getContext('2d');
 
 let W,H;
 let parts=[];
 let run=false;
 
-function resize(){
+function resizeFx(){
   W=window.innerWidth;
   H=window.innerHeight;
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  canvas.width = Math.floor(W * dpr);
-  canvas.height = Math.floor(H * dpr);
-  canvas.style.width = W + "px";
-  canvas.style.height = H + "px";
+  fx.width = Math.floor(W * dpr);
+  fx.height = Math.floor(H * dpr);
+  fx.style.width = W + "px";
+  fx.style.height = H + "px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-resize();
-window.addEventListener('resize',resize);
+resizeFx();
+window.addEventListener('resize', resizeFx);
 
-function spawn(mult=1){
+function spawnConfetti(mult=1){
   const count = Math.floor(420 * mult);
   for(let i=0;i<count;i++){
     parts.push({
@@ -361,7 +439,7 @@ function spawn(mult=1){
   }
 }
 
-function tick(){
+function tickConfetti(){
   if(!run) return;
 
   ctx.clearRect(0,0,W,H);
@@ -385,30 +463,165 @@ function tick(){
   ctx.globalAlpha = 1;
 
   if(parts.length){
-    requestAnimationFrame(tick);
+    requestAnimationFrame(tickConfetti);
   }else{
     run=false;
   }
 }
 
-/* ===== КНОПКА ДА ===== */
-yesBtn.onclick=()=>{
-  buttons.style.display="none";
+/* =========================
+   Screen switching
+========================= */
+function showScreen(n){
+  screen1.classList.toggle('hidden', n !== 1);
+  screen2.classList.toggle('hidden', n !== 2);
+  screen3.classList.toggle('hidden', n !== 3);
+}
 
-  titleEl.textContent="Урааа! 💘 Теперь ты моя валентинка!";
-  titleEl.classList.add('big');
+async function transitionToScreen3(){
+  // крутим открытку "как колесо" и скрываем
+  card.classList.remove('spin-in');
+  card.classList.add('spin-out');
+  await sleep(950);
 
-  msg.textContent="🥰💞🥰";
-  msg.classList.add('show');
+  // показываем 3-й экран и крутим обратно появлением
+  showScreen(3);
+  card.classList.remove('spin-out');
+  card.classList.add('spin-in');
+}
 
-  spawn(1.0);
-  setTimeout(()=>spawn(0.85), 160);
+/* =========================
+   Hearts flying on screen 3
+========================= */
+const heartsFx = document.getElementById('heartsFx');
+const hctx = heartsFx.getContext('2d', { alpha:true });
 
-  if(!run){
-    run=true;
-    tick();
+let HW=0, HH=0, hdpr=1;
+let hearts = [];
+let heartsRun = false;
+
+function resizeHearts(){
+  HW = window.innerWidth;
+  HH = window.innerHeight;
+  hdpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  heartsFx.width = Math.floor(HW * hdpr);
+  heartsFx.height = Math.floor(HH * hdpr);
+  heartsFx.style.width = HW + "px";
+  heartsFx.style.height = HH + "px";
+  hctx.setTransform(hdpr,0,0,hdpr,0,0);
+}
+resizeHearts();
+window.addEventListener('resize', resizeHearts);
+
+function rand(min,max){ return min + Math.random()*(max-min); }
+
+function spawnHearts(){
+  hearts = [];
+  const count = 36;
+  for(let i=0;i<count;i++){
+    hearts.push({
+      x: rand(0, HW),
+      y: rand(HH*0.2, HH+HH*0.6),
+      s: rand(10, 22),
+      vy: rand(-0.9, -0.35),
+      vx: rand(-0.25, 0.25),
+      rot: rand(0, Math.PI*2),
+      vr: rand(-0.01, 0.01),
+      a: rand(0.35, 0.9),
+      hue: Math.floor(rand(330, 360)) // розово-красные
+    });
   }
+}
+
+function drawHeartShape(x,y,size,rot,color,alpha){
+  hctx.save();
+  hctx.translate(x,y);
+  hctx.rotate(rot);
+  hctx.globalAlpha = alpha;
+  hctx.fillStyle = color;
+
+  const s = size;
+  hctx.beginPath();
+  // простое сердечко кривыми
+  hctx.moveTo(0, s*0.25);
+  hctx.bezierCurveTo(-s*0.8, -s*0.35, -s*0.55, -s*0.95, 0, -s*0.45);
+  hctx.bezierCurveTo( s*0.55, -s*0.95,  s*0.8, -s*0.35, 0, s*0.25);
+  hctx.closePath();
+  hctx.fill();
+  hctx.restore();
+}
+
+function tickHearts(){
+  if(!heartsRun) return;
+
+  hctx.clearRect(0,0,HW,HH);
+
+  for(const p of hearts){
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.vr;
+
+    // зациклим
+    if(p.y < -60) p.y = HH + 80;
+    if(p.x < -60) p.x = HW + 60;
+    if(p.x > HW + 60) p.x = -60;
+
+    drawHeartShape(
+      p.x, p.y, p.s, p.rot,
+      `hsl(${p.hue} 92% 62%)`,
+      p.a
+    );
+  }
+
+  requestAnimationFrame(tickHearts);
+}
+
+function startHearts(){
+  heartsFx.classList.add('show');
+  spawnHearts();
+  if(!heartsRun){
+    heartsRun = true;
+    requestAnimationFrame(tickHearts);
+  }
+}
+
+/* =========================
+   Buttons actions
+========================= */
+yesBtn.onclick = async () => {
+  // screen1 -> screen2
+  buttons1.style.display = "none";
+
+  // заменить текст (без печатания, как было)
+  title1.textContent = "Урааа! 💘 Теперь ты моя валентинка!";
+  title1.classList.add('big');
+
+  msg1.textContent = "🥰💞🥰";
+  msg1.classList.add('show');
+
+  // салют
+  spawnConfetti(1.0);
+  setTimeout(()=>spawnConfetti(0.85), 160);
+  if(!run){
+    run = true;
+    tickConfetti();
+  }
+
+  // небольшая пауза и перейти на экран 2 (чтобы было "как второй экран")
+  await sleep(350);
+  showScreen(2);
 };
+
+// переход на 3 экран по клику на большое сердце на 2 экране
+bigHeart.addEventListener('click', async () => {
+  await transitionToScreen3();
+  startHearts();
+});
+bigHeart.addEventListener('touchstart', async (e) => {
+  e.preventDefault();
+  await transitionToScreen3();
+  startHearts();
+}, { passive:false });
 </script>
 
 </body>
