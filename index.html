@@ -3,168 +3,454 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Валентинка 💘</title>
+  <title>Открытка 💘</title>
 
   <style>
+    :root{
+      --bg1:#ffdde9;
+      --bg2:#fff6fb;
+      --card:#ffffffcc;
+      --text:#1f1f1f;
+      --accent:#ff3b6b;
+      --yes:#2dd4bf;
+      --shadow: 0 22px 70px rgba(0,0,0,.16);
+    }
+    *{ box-sizing:border-box; }
+
     body{
       margin:0;
-      height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      background: linear-gradient(135deg,#ffd6e8,#ffeef6);
-      font-family: Arial, sans-serif;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 15%, var(--bg2), transparent 60%),
+        radial-gradient(900px 700px at 85% 70%, #ffe1f0, transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
       overflow:hidden;
     }
 
+    .glow{
+      position:fixed; inset:-30vmax;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(255,255,255,.55), transparent 45%),
+        radial-gradient(circle at 70% 65%, rgba(255,255,255,.35), transparent 40%),
+        radial-gradient(circle at 55% 20%, rgba(255,59,107,.12), transparent 42%);
+      filter: blur(18px);
+      animation: drift 10s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes drift{
+      from{ transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
+      to  { transform: translate3d( 1.5%,  1%, 0) scale(1.04); }
+    }
+
+    /* Canvas для салюта — ВСЕГДА поверх */
+    #fx{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index: 9999;
+    }
+
     .card{
-      background:white;
-      padding:30px 25px;
-      border-radius:25px;
+      width:min(720px, 92vw);            /* ✅ больше */
+      min-height:min(560px, 86vh);       /* ✅ выше */
+      padding: 36px 28px 34px;
+      border-radius: 34px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.55);
+      position:relative;
+      overflow:hidden;
       text-align:center;
-      width:320px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.15);
-      position:relative;
     }
 
-    .heart{
-      width:80px;
-      height:80px;
-      background:#ff3b6b;
-      margin:0 auto 15px;
-      transform:rotate(45deg);
-      position:relative;
-      animation:pulse 1s infinite;
-    }
-
-    .heart::before,
-    .heart::after{
+    .card::before{
       content:"";
-      width:80px;
-      height:80px;
-      background:#ff3b6b;
+      position:absolute; inset:14px;
+      border-radius:26px;
+      border: 2px dashed rgba(255,59,107,.33);
+      pointer-events:none;
+    }
+
+    .sparkle{
+      position:absolute;
+      inset:-50px -80px auto -80px;
+      height:160px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: rotate(8deg);
+      opacity:.35;
+      animation: shine 5.8s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-45%) rotate(8deg); opacity:.18; }
+      40%{ opacity:.42; }
+      100%{ transform: translateX(45%) rotate(8deg); opacity:.18; }
+    }
+
+    /* Большое сердце (оставляем), но центрируем красиво */
+    .big-heart-wrap{
+      display:grid;
+      place-items:center;
+      margin-top: 10px;
+      margin-bottom: 14px;
+    }
+
+    .big-heart{
+      width: 150px;      /* ✅ оставил большим */
+      height: 150px;
+      background: var(--accent);
+      transform: rotate(45deg);
+      border-radius: 20px;
+      position:relative;
+      box-shadow: 0 22px 60px rgba(255,59,107,.28);
+      animation: pulse 1.1s ease-in-out infinite;
+      will-change: transform;
+    }
+    .big-heart::before, .big-heart::after{
+      content:"";
+      width:150px;
+      height:150px;
+      background: var(--accent);
       border-radius:50%;
       position:absolute;
     }
-
-    .heart::before{
-      left:-40px;
-      top:0;
-    }
-
-    .heart::after{
-      top:-40px;
-      left:0;
-    }
+    .big-heart::before{ left:-75px; top:0; }
+    .big-heart::after { left:0; top:-75px; }
 
     @keyframes pulse{
-      0%{transform:rotate(45deg) scale(1);}
-      50%{transform:rotate(45deg) scale(1.1);}
-      100%{transform:rotate(45deg) scale(1);}
+      0%,100%{ transform: rotate(45deg) scale(1); }
+      50%{ transform: rotate(45deg) scale(1.06); }
+    }
+
+    /* Вопрос/заголовок */
+    .question{
+      transition: opacity .35s ease, transform .35s ease, max-height .35s ease;
+    }
+    .question.hide{
+      opacity:0;
+      transform: translateY(-10px);
+      max-height:0;
+      overflow:hidden;
     }
 
     h1{
-      font-size:22px;
-      margin-bottom:20px;
+      margin: 10px 0 18px;
+      font-size: clamp(26px, 3.2vw, 40px);
+      line-height:1.15;
+      letter-spacing:.2px;
+      transition: font-size .35s ease, transform .35s ease, opacity .35s ease;
+    }
+    h1.big{
+      font-size: clamp(34px, 4.8vw, 56px); /* ✅ явно больше */
+      margin: 18px 0 10px;
     }
 
-    .buttons{
-      position:relative;
-      height:60px;
+    /* Кнопки — flex, чтобы НЕ налезали */
+    .arena{
+      margin: 22px auto 0;
+      width: min(520px, 92%);
+      display:flex;
+      gap:16px;
+      justify-content:center;
+      align-items:center;
+      transition: opacity .35s ease, transform .35s ease, max-height .35s ease;
+    }
+    .arena.hide{
+      opacity:0;
+      transform: translateY(12px);
+      max-height:0;
+      overflow:hidden;
+      pointer-events:none;
     }
 
-    button{
-      padding:12px 20px;
-      border:none;
-      border-radius:15px;
-      font-size:16px;
-      font-weight:bold;
+    .btn{
+      border:0;
+      padding: 14px 26px;
+      border-radius: 18px;
+      font-size: 18px;
+      font-weight: 900;
       cursor:pointer;
-      box-shadow:0 5px 10px rgba(0,0,0,0.15);
+      user-select:none;
+      box-shadow: 0 14px 28px rgba(0,0,0,.12);
+      transition: transform .18s ease, filter .18s ease, opacity .18s ease;
+      position:relative;
+      z-index:2;
     }
+    .btn:active{ transform: translateY(1px) scale(.99); }
 
     #yes{
-      background:#2dd4bf;
-      color:#064e45;
-      margin-right:10px;
+      background: var(--yes);
+      color:#053c35;
     }
 
+    /* "Нет" будет двигаться ПЛАВНО через transform */
     #no{
       background:#ff5a7d;
-      color:white;
-      position:absolute;
-      left:160px;
-      top:0;
+      color:#fff;
+      will-change: transform;
+      transition: transform .30s cubic-bezier(.2,.8,.2,1), filter .18s ease;
     }
 
     .msg{
-      margin-top:15px;
-      font-size:17px;
-      font-weight:bold;
-      min-height:24px;
+      margin-top: 18px;
+      min-height: 46px;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .msg.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .msg.big{
+      font-size: clamp(22px, 3vw, 34px);
+      line-height:1.12;
     }
   </style>
 </head>
 
 <body>
+  <div class="glow"></div>
+  <canvas id="fx"></canvas>
 
-  <div class="card">
+  <div class="card" id="card">
+    <div class="sparkle"></div>
 
-    <div class="heart"></div>
+    <div class="big-heart-wrap" aria-hidden="true">
+      <div class="big-heart"></div>
+    </div>
 
-    <h1>Ты будешь моей валентинкой?</h1>
+    <div class="question" id="question">
+      <h1 id="title">Принцесска, ты будешь моей влаентинкой?</h1>
+    </div>
 
-    <div class="buttons" id="arena">
-
-      <button id="yes">Да</button>
-      <button id="no">Нет</button>
-
+    <div class="arena" id="arena" aria-label="Выбор">
+      <button class="btn" id="yes">Да</button>
+      <button class="btn" id="no">Нет</button>
     </div>
 
     <div class="msg" id="msg"></div>
-
   </div>
 
+  <script>
+    // ---------- Плавное убегание "Нет" (без телепорта) ----------
+    const noBtn = document.getElementById('no');
+    const yesBtn = document.getElementById('yes');
+    const arena = document.getElementById('arena');
+    const question = document.getElementById('question');
+    const title = document.getElementById('title');
+    const msg = document.getElementById('msg');
 
-<script>
+    // текущий сдвиг кнопки "Нет"
+    let nx = 0, ny = 0;
 
-const noBtn = document.getElementById("no");
-const yesBtn = document.getElementById("yes");
-const arena = document.getElementById("arena");
-const msg = document.getElementById("msg");
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
+    function moveNoSmoothAwayFrom(clientX, clientY){
+      const a = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
 
-function moveNo(){
+      // курсор в координатах арены
+      const px = clientX - a.left;
+      const py = clientY - a.top;
 
-  const width = arena.offsetWidth - noBtn.offsetWidth;
-  const height = arena.offsetHeight - noBtn.offsetHeight;
+      // текущий центр "Нет"
+      const cx = (b.left - a.left) + b.width/2;
+      const cy = (b.top  - a.top ) + b.height/2;
 
-  const x = Math.random() * width;
-  const y = Math.random() * height;
+      // направление от курсора
+      let dx = cx - px;
+      let dy = cy - py;
 
-  noBtn.style.left = x + "px";
-  noBtn.style.top = y + "px";
+      const len = Math.hypot(dx, dy) || 1;
+      dx /= len; dy /= len;
 
-}
+      // небольшой шаг — чтобы это выглядело как "убегает", а не телепорт
+      const step = 90;
+      nx += dx * step;
+      ny += dy * step;
 
+      // ограничим, чтобы кнопка не улетала далеко за пределы
+      const maxX = a.width * 0.45;
+      const maxY = a.height * 0.35;
+      nx = clamp(nx, -maxX, maxX);
+      ny = clamp(ny, -maxY, maxY);
 
-arena.addEventListener("mousemove", moveNo);
+      noBtn.style.transform = `translate(${nx}px, ${ny}px)`;
+    }
 
-noBtn.addEventListener("click", function(e){
-  e.preventDefault();
-  moveNo();
-});
+    // срабатываем только когда курсор близко
+    let raf = 0;
+    arena.addEventListener('mousemove', (e) => {
+      const b = noBtn.getBoundingClientRect();
+      const dist = Math.hypot(e.clientX - (b.left + b.width/2), e.clientY - (b.top + b.height/2));
+      if (dist > 110) return;
 
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => moveNoSmoothAwayFrom(e.clientX, e.clientY));
+    }, { passive:true });
 
-yesBtn.addEventListener("click", function(){
+    // мобилка — убегаем при попытке тапнуть
+    noBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      moveNoSmoothAwayFrom(t.clientX, t.clientY);
+    }, { passive:false });
 
-  msg.innerHTML = "Урааа! 💘 Теперь ты моя валентинка!";
-  noBtn.style.display = "none";
-  yesBtn.style.transform = "scale(1.1)";
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      // даже если кликнул — пусть "убегает"
+      const a = arena.getBoundingClientRect();
+      moveNoSmoothAwayFrom(a.left + a.width/2, a.top + a.height/2);
+    });
 
-});
+    // ---------- Салют (конфетти) ----------
+    const canvas = document.getElementById('fx');
+    const ctx = canvas.getContext('2d', { alpha:true });
+    let W=0, H=0, dpr=1;
+    let confetti = [];
+    let running = false;
 
-</script>
+    function resize(){
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.floor(window.innerWidth);
+      H = Math.floor(window.innerHeight);
+      canvas.width = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
+    function hsl(h,s,l){ return `hsl(${h} ${s}% ${l}%)`; }
+
+    function spawnBurst(mult=1){
+      const count = Math.floor(380 * mult); // ✅ пышнее
+      const originX = W/2;
+      const originY = Math.min(H*0.34, 260);
+
+      for(let i=0;i<count;i++){
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3.2 + Math.random()*7.2;
+        const size = 4 + Math.random()*8;
+
+        confetti.push({
+          x: originX + (Math.random()*80 - 40),
+          y: originY + (Math.random()*34 - 17),
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - (3.8 + Math.random()*3.2),
+          g: 0.10 + Math.random()*0.14,
+          rot: Math.random()*Math.PI,
+          vr: (Math.random()-0.5)*0.45,
+          w: size,
+          h: size * (0.55 + Math.random()*1.1),
+          life: 200 + Math.random()*110,
+          color: hsl(Math.floor(Math.random()*360), 95, 62),
+          shape: Math.random() < 0.26 ? 'heart' : 'rect'
+        });
+      }
+    }
+
+    function drawHeart(x,y,w,h,rot,color){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+
+      ctx.beginPath();
+      const s = Math.min(w,h);
+      const t = s/2;
+      ctx.moveTo(0, t*0.9);
+      ctx.bezierCurveTo(-t*1.2, t*0.2, -t*0.8, -t*0.9, 0, -t*0.2);
+      ctx.bezierCurveTo( t*0.8, -t*0.9,  t*1.2,  t*0.2, 0, t*0.9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawRect(x,y,w,h,rot,color){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      ctx.fillRect(-w/2, -h/2, w, h);
+      ctx.restore();
+    }
+
+    function tick(){
+      if(!running) return;
+      ctx.clearRect(0,0,W,H);
+
+      for(let i=confetti.length-1;i>=0;i--){
+        const p = confetti[i];
+        p.life--;
+
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+
+        p.vx *= 0.995;
+        p.vy *= 0.995;
+
+        const alpha = Math.max(0, Math.min(1, p.life/110));
+        ctx.globalAlpha = alpha;
+
+        if(p.shape === 'heart') drawHeart(p.x, p.y, p.w, p.h, p.rot, p.color);
+        else drawRect(p.x, p.y, p.w, p.h, p.rot, p.color);
+
+        if(p.life <= 0 || p.y > H + 120) confetti.splice(i,1);
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+
+      if(confetti.length === 0){
+        running = false;
+        ctx.clearRect(0,0,W,H);
+        return;
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // ---------- Нажали "Да" ----------
+    yesBtn.addEventListener('click', () => {
+      // убираем вопрос + кнопки
+      question.classList.add('hide');
+      arena.classList.add('hide');
+
+      // делаем большой тайтл
+      title.textContent = "Урааа! 💘 Теперь ты моя валентинка!";
+      title.classList.add('big');
+
+      // показать обратно (уже как “финальный” заголовок)
+      setTimeout(() => {
+        question.classList.remove('hide');
+        msg.textContent = "🥰💞🥰";
+        msg.classList.add('big','show');
+      }, 260);
+
+      // салют (две волны)
+      spawnBurst(1.0);
+      setTimeout(() => spawnBurst(0.9), 170);
+
+      if(!running){
+        running = true;
+        requestAnimationFrame(tick);
+      }
+    });
+  </script>
 </body>
 </html>
