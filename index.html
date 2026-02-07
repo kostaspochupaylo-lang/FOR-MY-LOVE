@@ -13,29 +13,25 @@
   --text:#1f1f1f;
   --accent:#ff3b6b;
   --yes:#2dd4bf;
+  --shadow: 0 22px 70px rgba(0,0,0,.16);
 }
 
-*{box-sizing:border-box}
+*{box-sizing:border-box;}
 
 body{
   margin:0;
   min-height:100vh;
   display:grid;
   place-items:center;
-  font-family:system-ui;
-  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  font-family:system-ui, Arial;
+  background:
+    radial-gradient(1200px 800px at 20% 15%, var(--bg2), transparent 60%),
+    radial-gradient(900px 700px at 85% 70%, #ffe1f0, transparent 60%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
   overflow:hidden;
 }
 
-/* Canvas */
-#fx{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:99;
-}
-
-/* Card */
+/* ====== КАРТОЧКА ====== */
 .card{
   width:min(720px,92vw);
   min-height:min(560px,86vh);
@@ -43,92 +39,116 @@ body{
   display:flex;
   flex-direction:column;
   justify-content:center;
+  align-items:center;
 
-  padding:60px 30px 50px;
+  padding:60px 28px 50px;
 
+  border-radius:34px;
   background:var(--card);
-  border-radius:32px;
-  box-shadow:0 20px 60px rgba(0,0,0,.15);
-  text-align:center;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.55);
+
   position:relative;
+  text-align:center;
 }
 
-/* Heart */
+/* ====== СЕРДЦЕ ====== */
 .heart-wrap{
-  margin-bottom:15px;
+  margin-bottom:20px;
 }
 
 .heart{
-  width:140px;
-  height:140px;
+  width:150px;
+  height:150px;
   background:var(--accent);
   transform:rotate(45deg);
-  margin:auto;
   position:relative;
-  border-radius:18px;
-  animation:pulse 1s infinite;
+  border-radius:20px;
+  animation:pulse 1.2s infinite;
 }
 
-.heart:before,.heart:after{
+.heart:before,
+.heart:after{
   content:"";
-  width:140px;
-  height:140px;
+  width:150px;
+  height:150px;
   background:var(--accent);
   border-radius:50%;
   position:absolute;
 }
 
-.heart:before{left:-70px}
-.heart:after{top:-70px}
+.heart:before{left:-75px;top:0;}
+.heart:after{top:-75px;left:0;}
 
 @keyframes pulse{
-  0%,100%{transform:rotate(45deg) scale(1)}
-  50%{transform:rotate(45deg) scale(1.06)}
+  0%,100%{transform:rotate(45deg) scale(1);}
+  50%{transform:rotate(45deg) scale(1.06);}
 }
 
-/* Title */
+/* ====== ТЕКСТ ====== */
 h1{
-  font-size:clamp(24px,3vw,36px);
-  margin:10px 0 20px;
+  font-size:clamp(26px,3vw,40px);
+  margin-bottom:25px;
+  line-height:1.2;
 }
 
-/* Buttons */
-.arena{
+h1.big{
+  font-size:clamp(34px,4.5vw,56px);
+}
+
+/* ====== КНОПКИ ====== */
+.buttons{
   display:flex;
-  justify-content:center;
   gap:16px;
 }
 
 .btn{
-  padding:14px 26px;
-  border:0;
-  border-radius:16px;
+  border:none;
+  padding:14px 28px;
+  border-radius:18px;
   font-size:18px;
-  font-weight:700;
+  font-weight:900;
   cursor:pointer;
+  box-shadow:0 14px 28px rgba(0,0,0,.12);
+  transition:.2s;
+}
+
+.btn:active{
+  transform:scale(.96);
 }
 
 #yes{
   background:var(--yes);
+  color:#053c35;
 }
 
 #no{
   background:#ff5a7d;
-  color:white;
-  transition:.3s;
-  will-change:transform;
+  color:#fff;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1);
 }
 
-/* Message */
+/* ====== СООБЩЕНИЕ ====== */
 .msg{
   margin-top:20px;
-  font-size:24px;
-  font-weight:700;
+  font-size:30px;
+  font-weight:900;
   opacity:0;
   transition:.4s;
 }
 
-.msg.show{opacity:1}
+.msg.show{
+  opacity:1;
+}
+
+/* ====== КОНФЕТТИ ====== */
+#fx{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:999;
+}
 </style>
 </head>
 
@@ -144,7 +164,7 @@ h1{
 
   <h1 id="title">Принцесска, ты будешь моей валентинкой?</h1>
 
-  <div class="arena" id="arena">
+  <div class="buttons" id="buttons">
     <button class="btn" id="yes">Да</button>
     <button class="btn" id="no">Нет</button>
   </div>
@@ -153,121 +173,119 @@ h1{
 
 </div>
 
+
 <script>
-/* ---------- NO BUTTON ---------- */
+// ===== УБЕГАЮЩАЯ КНОПКА =====
+const noBtn = document.getElementById('no');
+const yesBtn = document.getElementById('yes');
+const buttons = document.getElementById('buttons');
+const title = document.getElementById('title');
+const msg = document.getElementById('msg');
 
-const noBtn=document.getElementById('no');
-const arena=document.getElementById('arena');
-
-let x=0,y=0;
+let nx=0, ny=0;
 
 function clamp(v,min,max){
-  return Math.max(min,Math.min(max,v))
+  return Math.max(min,Math.min(max,v));
 }
 
-function moveNo(e){
-  const a=arena.getBoundingClientRect();
-  const b=noBtn.getBoundingClientRect();
+buttons.addEventListener('mousemove', e=>{
 
-  const px=e.clientX-a.left;
-  const py=e.clientY-a.top;
+  const rect = noBtn.getBoundingClientRect();
 
-  const cx=b.left-a.left+b.width/2;
-  const cy=b.top-a.top+b.height/2;
+  const cx = rect.left+rect.width/2;
+  const cy = rect.top+rect.height/2;
 
-  let dx=cx-px;
-  let dy=cy-py;
+  const dist = Math.hypot(e.clientX-cx, e.clientY-cy);
 
-  const len=Math.hypot(dx,dy)||1;
-  dx/=len; dy/=len;
+  if(dist>120) return;
 
-  x+=dx*80;
-  y+=dy*80;
+  let dx = cx - e.clientX;
+  let dy = cy - e.clientY;
 
-  x=clamp(x,-a.width*.4,a.width*.4);
-  y=clamp(y,-a.height*.3,a.height*.3);
+  const len = Math.hypot(dx,dy)||1;
 
-  noBtn.style.transform=`translate(${x}px,${y}px)`;
-}
+  dx/=len;
+  dy/=len;
 
-arena.addEventListener('mousemove',e=>{
-  const b=noBtn.getBoundingClientRect();
-  const d=Math.hypot(
-    e.clientX-(b.left+b.width/2),
-    e.clientY-(b.top+b.height/2)
-  );
-  if(d<110) moveNo(e);
+  nx+=dx*70;
+  ny+=dy*70;
+
+  nx=clamp(nx,-150,150);
+  ny=clamp(ny,-90,90);
+
+  noBtn.style.transform=`translate(${nx}px,${ny}px)`;
 });
 
-/* ---------- CONFETTI ---------- */
-
+// ===== САЛЮТ =====
 const canvas=document.getElementById('fx');
 const ctx=canvas.getContext('2d');
 
-let W,H,confetti=[],run=false;
+let W,H;
+let parts=[];
+let run=false;
 
 function resize(){
-  W=innerWidth;
-  H=innerHeight;
+  W=window.innerWidth;
+  H=window.innerHeight;
   canvas.width=W;
   canvas.height=H;
 }
-addEventListener('resize',resize);
 resize();
+window.addEventListener('resize',resize);
 
 function spawn(){
-  for(let i=0;i<300;i++){
-    confetti.push({
+  for(let i=0;i<400;i++){
+    parts.push({
       x:W/2,
-      y:H*.3,
-      vx:(Math.random()-.5)*8,
-      vy:-Math.random()*8,
-      g:.15,
-      s:4+Math.random()*6,
-      l:200
+      y:H/3,
+      vx:(Math.random()-0.5)*14,
+      vy:(Math.random()-1)*14,
+      g:.2,
+      l:200,
+      c:`hsl(${Math.random()*360},95%,60%)`
     });
   }
 }
 
 function tick(){
   if(!run) return;
+
   ctx.clearRect(0,0,W,H);
 
-  confetti.forEach((p,i)=>{
+  parts.forEach((p,i)=>{
+
     p.vy+=p.g;
     p.x+=p.vx;
     p.y+=p.vy;
     p.l--;
 
-    ctx.fillStyle=`hsl(${Math.random()*360},90%,60%)`;
-    ctx.fillRect(p.x,p.y,p.s,p.s);
+    ctx.fillStyle=p.c;
+    ctx.fillRect(p.x,p.y,4,4);
 
-    if(p.l<0) confetti.splice(i,1);
+    if(p.l<=0) parts.splice(i,1);
   });
 
-  if(confetti.length) requestAnimationFrame(tick);
-  else run=false;
+  if(parts.length){
+    requestAnimationFrame(tick);
+  }else{
+    run=false;
+  }
 }
 
-/* ---------- YES ---------- */
+// ===== КНОПКА ДА =====
+yesBtn.onclick=()=>{
 
-const yes=document.getElementById('yes');
-const title=document.getElementById('title');
-const msg=document.getElementById('msg');
+  buttons.style.display="none";
 
-yes.onclick=()=>{
-
-  title.textContent="Урааа 💘 Ты моя валентинка!";
-  arena.style.display="none";
+  title.textContent="Урааа! 💘 Теперь ты моя валентинка!";
+  title.classList.add('big');
 
   msg.textContent="🥰💞🥰";
   msg.classList.add('show');
 
   spawn();
-  if(!run){
-    run=true;
-    tick();
-  }
+  run=true;
+  tick();
 };
 </script>
 
