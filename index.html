@@ -32,7 +32,6 @@ body{
     linear-gradient(135deg, var(--bg1), var(--bg2));
   overflow:hidden;
 
-  /* фон стартует после небольшой паузы */
   animation: bgIn 1400ms ease-out 600ms both;
 }
 
@@ -62,11 +61,13 @@ body{
   position:relative;
   text-align:center;
 
-  /* карточка после паузы и дольше */
   opacity:0;
   transform: translateY(28px) scale(.975);
   animation: cardIn 1100ms cubic-bezier(.2,.9,.2,1) 600ms both;
+
   transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+  transform-origin:center;
 }
 
 @keyframes cardIn{
@@ -83,22 +84,24 @@ body{
   pointer-events:none;
 }
 
+/* ✅ плавнее/дольше прокрут к 3 экрану */
 .card.spin-out{
-  animation: spinOut 950ms cubic-bezier(.2,.9,.2,1) both;
+  animation: spinOut 1650ms cubic-bezier(.18,.85,.18,1) both;
 }
 @keyframes spinOut{
-  0%{ opacity:1; transform: translateY(0) rotate(0deg) scale(1); filter: blur(0); }
-  55%{ opacity:1; transform: translateY(0) rotate(320deg) scale(.9); filter: blur(1px); }
-  100%{ opacity:0; transform: translateY(0) rotate(720deg) scale(.82); filter: blur(6px); }
+  0%   { opacity:1; transform: translateY(0) rotate(0deg)    scale(1);    filter: blur(0); }
+  35%  { opacity:1; transform: translateY(0) rotate(480deg)  scale(.95);  filter: blur(.6px); }
+  70%  { opacity:.92;transform: translateY(0) rotate(1080deg) scale(.88); filter: blur(1.8px); }
+  100% { opacity:0; transform: translateY(0) rotate(1440deg) scale(.82);  filter: blur(6px); }
 }
 
 .card.spin-in{
-  animation: spinIn 1100ms cubic-bezier(.2,.9,.2,1) both;
+  animation: spinIn 1850ms cubic-bezier(.18,.85,.18,1) both;
 }
 @keyframes spinIn{
-  0%{ opacity:0; transform: translateY(0) rotate(-540deg) scale(.82); filter: blur(7px); }
-  60%{ opacity:1; transform: translateY(0) rotate(10deg) scale(1.01); filter: blur(0); }
-  100%{ opacity:1; transform: translateY(0) rotate(0deg) scale(1); filter: blur(0); }
+  0%   { opacity:0; transform: translateY(0) rotate(-1080deg) scale(.82); filter: blur(7px); }
+  55%  { opacity:1; transform: translateY(0) rotate(18deg)    scale(1.01);filter: blur(0); }
+  100% { opacity:1; transform: translateY(0) rotate(0deg)     scale(1);   filter: blur(0); }
 }
 
 /* ====== ЭКРАНЫ ====== */
@@ -137,11 +140,9 @@ body{
   cursor: default;
 }
 
-.heart.clickable{
-  cursor:pointer;
-}
+.heart.clickable{ cursor:pointer; }
 
-/* ✅ ТОЛЬКО ДЛЯ 2 ЭКРАНА: двигаем большое сердце правее */
+/* ✅ сердце на 2 экране чуть правее */
 #screen2 .heart-wrap{
   width:100%;
   display:flex;
@@ -149,7 +150,7 @@ body{
 }
 #bigHeart{
   position:relative;
-  left: 22px; /* <-- тут регулируй: 10..40px */
+  left:22px; /* ← двигай 10..40px */
 }
 
 .heart:before,
@@ -161,7 +162,6 @@ body{
   border-radius:50%;
   position:absolute;
 }
-
 .heart:before{ left:-75px; top:0; }
 .heart:after { top:-75px; left:0; }
 
@@ -177,10 +177,7 @@ h1{
   line-height:1.2;
   opacity:0;
 }
-
-h1.big{
-  font-size:clamp(34px,4.5vw,56px);
-}
+h1.big{ font-size:clamp(34px,4.5vw,56px); }
 
 .typing-caret::after{
   content:"";
@@ -242,23 +239,36 @@ h1.big{
 .hint{
   margin-top:14px;
   font-size:14px;
-  opacity:.72;
+  opacity:0;
+  transform: translateY(6px);
 }
 
-/* ====== КОНФЕТТИ ====== */
+/* ✅ 2 экран: hint появляется ровно вместе с основным */
+#screen2 .s2-appear,
+#screen2 .hint{
+  opacity:0;
+  transform: translateY(10px);
+}
+#screen2.on .s2-appear,
+#screen2.on .hint{
+  opacity:1;
+  transform: translateY(0);
+  transition: opacity 800ms ease, transform 800ms ease;
+}
+#screen2.on .hint{ opacity:.72; }
+
+/* ====== CANVAS ====== */
 #fx{
   position:fixed;
   inset:0;
   pointer-events:none;
   z-index:999;
 }
-
-/* ====== 3-й экран: летающие сердечки ====== */
 #heartsFx{
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index: 998; /* под конфетти, но над фоном */
+  z-index:998;
   opacity:0;
   transition: opacity 600ms ease;
 }
@@ -294,8 +304,8 @@ h1.big{
       <div class="heart clickable" id="bigHeart" aria-label="Большое сердце"></div>
     </div>
 
-    <h1 class="big" id="title2" style="opacity:1;">Урааа! 💘 Теперь ты моя валентинка!</h1>
-    <div class="msg show" id="msg2">🥰💞🥰</div>
+    <h1 class="big s2-appear" id="title2" style="opacity:1;">Урааа! 💘 Теперь ты моя валентинка!</h1>
+    <div class="msg show s2-appear" id="msg2">🥰💞🥰</div>
     <div class="hint" id="hint2">жмякни на большое сердечко</div>
   </div>
 
@@ -323,11 +333,9 @@ const screen3 = document.getElementById('screen3');
 
 const title1 = document.getElementById('title1');
 const buttons1 = document.getElementById('buttons1');
-const msg1 = document.getElementById('msg1');
 
 const yesBtn = document.getElementById('yes');
-const noBtn = document.getElementById('no');
-
+const noBtn  = document.getElementById('no');
 const bigHeart = document.getElementById('bigHeart');
 
 const fullText1 = title1.textContent;
@@ -354,7 +362,6 @@ function typeText(el, text, speed = 45){
   });
 }
 
-// Пауза → сердце уже появилось по CSS → затем печатание → затем кнопки
 (async () => {
   await sleep(1500);
   await typeText(title1, fullText1, 45);
@@ -362,7 +369,7 @@ function typeText(el, text, speed = 45){
 })();
 
 /* =========================
-   "Нет" убегает (как было)
+   "Нет" убегает
 ========================= */
 let nx=0, ny=0;
 function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
@@ -413,12 +420,12 @@ noBtn.addEventListener('touchstart', (e) => {
 }, { passive:false });
 
 /* =========================
-   Confetti (как было)
+   Confetti (плавнее и дольше)
 ========================= */
 const fx = document.getElementById('fx');
 const ctx = fx.getContext('2d');
 
-let W,H;
+let W=0,H=0;
 let parts=[];
 let run=false;
 
@@ -426,28 +433,40 @@ function resizeFx(){
   W=window.innerWidth;
   H=window.innerHeight;
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  fx.width = Math.floor(W * dpr);
+  fx.width  = Math.floor(W * dpr);
   fx.height = Math.floor(H * dpr);
   fx.style.width = W + "px";
-  fx.style.height = H + "px";
+  fx.style.height= H + "px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 resizeFx();
 window.addEventListener('resize', resizeFx);
 
-function spawnConfetti(mult=1){
-  const count = Math.floor(420 * mult);
+function spawnConfettiBurst(mult=1){
+  const count = Math.floor(220 * mult);
   for(let i=0;i<count;i++){
     parts.push({
-      x:W/2 + (Math.random()*60-30),
-      y:H/3 + (Math.random()*30-15),
-      vx:(Math.random()-0.5)*14,
-      vy:(Math.random()-1)*14,
-      g:.2,
-      l:220 + Math.random()*80,
+      x: W/2 + (Math.random()*80-40),
+      y: H/3 + (Math.random()*40-20),
+      vx:(Math.random()-0.5)*10,
+      vy:(Math.random()-1.1)*12,
+      g: 0.12 + Math.random()*0.08,
+      l: 420 + Math.random()*220,      // ✅ живут дольше
+      s: 2 + Math.random()*3,
       c:`hsl(${Math.random()*360},95%,60%)`
     });
   }
+}
+
+function emitConfetti(durationMs=3500){
+  const start = performance.now();
+  const step = () => {
+    const t = performance.now() - start;
+    const k = Math.max(0, 1 - t/durationMs);
+    spawnConfettiBurst(0.55 * k + 0.15);
+    if(t < durationMs) requestAnimationFrame(step);
+  };
+  step();
 }
 
 function tickConfetti(){
@@ -459,25 +478,21 @@ function tickConfetti(){
     const p = parts[i];
 
     p.vy += p.g;
-    p.x += p.vx;
-    p.y += p.vy;
+    p.x  += p.vx;
+    p.y  += p.vy;
     p.l--;
 
-    const a = Math.max(0, Math.min(1, p.l/140));
+    const a = Math.max(0, Math.min(1, p.l/260)); // ✅ мягче затухание
     ctx.globalAlpha = a;
     ctx.fillStyle = p.c;
-    ctx.fillRect(p.x,p.y,4,4);
+    ctx.fillRect(p.x,p.y,p.s,p.s);
 
-    if(p.l<=0 || p.y>H+80) parts.splice(i,1);
+    if(p.l<=0 || p.y>H+120) parts.splice(i,1);
   }
 
   ctx.globalAlpha = 1;
 
-  if(parts.length){
-    requestAnimationFrame(tickConfetti);
-  }else{
-    run=false;
-  }
+  requestAnimationFrame(tickConfetti);
 }
 
 /* =========================
@@ -492,7 +507,7 @@ function showScreen(n){
 async function transitionToScreen3(){
   card.classList.remove('spin-in');
   card.classList.add('spin-out');
-  await sleep(950);
+  await sleep(1650);
 
   showScreen(3);
   card.classList.remove('spin-out');
@@ -526,16 +541,16 @@ function rand(min,max){ return min + Math.random()*(max-min); }
 
 function spawnHearts(){
   hearts = [];
-  const count = 36;
+  const count = 38;
   for(let i=0;i<count;i++){
     hearts.push({
       x: rand(0, HW),
-      y: rand(HH*0.2, HH+HH*0.6),
+      y: rand(HH*0.25, HH+HH*0.7),
       s: rand(10, 22),
-      vy: rand(-0.9, -0.35),
-      vx: rand(-0.25, 0.25),
+      vy: rand(-0.95, -0.35),
+      vx: rand(-0.28, 0.28),
       rot: rand(0, Math.PI*2),
-      vr: rand(-0.01, 0.01),
+      vr: rand(-0.012, 0.012),
       a: rand(0.35, 0.9),
       hue: Math.floor(rand(330, 360))
     });
@@ -569,9 +584,9 @@ function tickHearts(){
     p.y += p.vy;
     p.rot += p.vr;
 
-    if(p.y < -60) p.y = HH + 80;
-    if(p.x < -60) p.x = HW + 60;
-    if(p.x > HW + 60) p.x = -60;
+    if(p.y < -80) p.y = HH + 100;
+    if(p.x < -80) p.x = HW + 80;
+    if(p.x > HW + 80) p.x = -80;
 
     drawHeartShape(
       p.x, p.y, p.s, p.rot,
@@ -596,23 +611,23 @@ function startHearts(){
    Buttons actions
 ========================= */
 yesBtn.onclick = async () => {
+  // screen1 -> screen2
   buttons1.style.display = "none";
 
-  title1.textContent = "Урааа! 💘 Теперь ты моя валентинка!";
-  title1.classList.add('big');
+  // конфетти: дольше и мягче
+  emitConfetti(3500);
 
-  msg1.textContent = "🥰💞🥰";
-  msg1.classList.add('show');
-
-  spawnConfetti(1.0);
-  setTimeout(()=>spawnConfetti(0.85), 160);
   if(!run){
     run = true;
     tickConfetti();
   }
 
+  // показать экран 2
   await sleep(350);
   showScreen(2);
+
+  // ✅ одновременно показать основной + мелкий
+  requestAnimationFrame(() => screen2.classList.add('on'));
 };
 
 bigHeart.addEventListener('click', async () => {
