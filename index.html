@@ -31,12 +31,12 @@ body{
     linear-gradient(135deg, var(--bg1), var(--bg2));
   overflow:hidden;
 
-  /* ✅ анимация фона при открытии */
-  animation: bgIn 800ms ease-out both;
+  /* фон стартует после небольшой паузы */
+  animation: bgIn 1400ms ease-out 600ms both;
 }
 
 @keyframes bgIn{
-  from{ filter: blur(6px); transform: scale(1.02); }
+  from{ filter: blur(7px); transform: scale(1.02); }
   to  { filter: blur(0);  transform: scale(1); }
 }
 
@@ -61,19 +61,18 @@ body{
   position:relative;
   text-align:center;
 
-  /* ✅ анимация появления карточки */
+  /* карточка тоже после паузы и дольше */
   opacity:0;
-  transform: translateY(22px) scale(.98);
-  animation: cardIn 720ms cubic-bezier(.2,.9,.2,1) 120ms both;
+  transform: translateY(28px) scale(.975);
+  animation: cardIn 1100ms cubic-bezier(.2,.9,.2,1) 600ms both;
 }
 
 @keyframes cardIn{
-  0%{ opacity:0; transform: translateY(22px) scale(.98); }
+  0%{ opacity:0; transform: translateY(28px) scale(.975); }
   60%{ opacity:1; transform: translateY(-6px) scale(1.01); }
   100%{ opacity:1; transform: translateY(0) scale(1); }
 }
 
-/* рамка */
 .card::before{
   content:"";
   position:absolute; inset:14px;
@@ -82,19 +81,18 @@ body{
   pointer-events:none;
 }
 
-/* ====== СЕРДЦЕ ====== */
+/* ====== СЕРДЦЕ (первым) ====== */
 .heart-wrap{
   margin-bottom:20px;
 
-  /* ✅ сердце появляется чуть позже */
   opacity:0;
-  transform: translateY(-8px) scale(.9);
-  animation: popIn 520ms cubic-bezier(.2,.9,.2,1) 420ms both;
+  transform: translateY(-10px) scale(.88);
+  animation: popIn 700ms cubic-bezier(.2,.9,.2,1) 1300ms both; /* после появления карточки */
 }
 
 @keyframes popIn{
-  0%{ opacity:0; transform: translateY(-8px) scale(.9); }
-  70%{ opacity:1; transform: translateY(0) scale(1.06); }
+  0%{ opacity:0; transform: translateY(-10px) scale(.88); }
+  70%{ opacity:1; transform: translateY(0) scale(1.07); }
   100%{ opacity:1; transform: translateY(0) scale(1); }
 }
 
@@ -128,36 +126,50 @@ body{
   50%{transform:rotate(45deg) scale(1.06);}
 }
 
-/* ====== ТЕКСТ ====== */
+/* ====== ТЕКСТ (печатание, вторым) ====== */
 h1{
   font-size:clamp(26px,3vw,40px);
   margin:0 0 25px;
   line-height:1.2;
 
-  /* ✅ текст появляется после сердца */
-  opacity:0;
-  transform: translateY(10px);
-  animation: fadeUp 520ms ease-out 520ms both;
+  opacity:0; /* покажем когда начнем печатать */
 }
 
 h1.big{
   font-size:clamp(34px,4.5vw,56px);
 }
 
-@keyframes fadeUp{
-  from{ opacity:0; transform: translateY(10px); }
-  to{ opacity:1; transform: translateY(0); }
+/* мигающий курсор при печатании */
+.typing-caret::after{
+  content:"";
+  display:inline-block;
+  width:2px;
+  height:1em;
+  margin-left:6px;
+  background: currentColor;
+  transform: translateY(2px);
+  animation: caretBlink .75s steps(1) infinite;
 }
 
-/* ====== КНОПКИ ====== */
+@keyframes caretBlink{
+  50%{ opacity:0; }
+}
+
+/* ====== КНОПКИ (третьим) ====== */
 .buttons{
   display:flex;
   gap:16px;
 
-  /* ✅ кнопки появляются последними */
   opacity:0;
   transform: translateY(10px);
-  animation: fadeUp 520ms ease-out 660ms both;
+  pointer-events:none;
+}
+
+.buttons.show{
+  opacity:1;
+  transform: translateY(0);
+  transition: opacity 650ms ease, transform 650ms ease;
+  pointer-events:auto;
 }
 
 .btn{
@@ -192,7 +204,6 @@ h1.big{
   opacity:0;
   transition:.4s;
 }
-
 .msg.show{ opacity:1; }
 
 /* ====== КОНФЕТТИ ====== */
@@ -224,18 +235,50 @@ h1.big{
 </div>
 
 <script>
-// ===== УБЕГАЮЩАЯ КНОПКА =====
+/* ===== ПЕЧАТАНИЕ ТЕКСТА (появляется после сердца) ===== */
+const titleEl = document.getElementById('title');
+const buttons = document.getElementById('buttons');
+
+const fullText = titleEl.textContent;
+titleEl.textContent = "";
+titleEl.style.opacity = "1";
+
+function typeText(el, text, speed = 45){
+  return new Promise((resolve) => {
+    let i = 0;
+    el.classList.add('typing-caret');
+
+    const timer = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+
+      if(i >= text.length){
+        clearInterval(timer);
+        // небольшой “дочит” перед показом кнопок
+        setTimeout(() => {
+          el.classList.remove('typing-caret');
+          resolve();
+        }, 350);
+      }
+    }, speed);
+  });
+}
+
+// Пауза → сердце уже появилось по CSS → затем печатание → затем кнопки
+(async () => {
+  // дождемся пока карточка/сердце проявятся (совпадает с таймингами CSS)
+  await new Promise(r => setTimeout(r, 1500));
+  await typeText(titleEl, fullText, 45);
+  buttons.classList.add('show');
+})();
+
+/* ===== УБЕГАЮЩАЯ КНОПКА (без изменений по смыслу) ===== */
 const noBtn = document.getElementById('no');
 const yesBtn = document.getElementById('yes');
-const buttons = document.getElementById('buttons');
-const title = document.getElementById('title');
 const msg = document.getElementById('msg');
 
 let nx=0, ny=0;
-
-function clamp(v,min,max){
-  return Math.max(min,Math.min(max,v));
-}
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
 
 buttons.addEventListener('mousemove', e=>{
   const rect = noBtn.getBoundingClientRect();
@@ -260,7 +303,6 @@ buttons.addEventListener('mousemove', e=>{
   noBtn.style.transform = `translate(${nx}px,${ny}px)`;
 });
 
-// мобилка: убегает при попытке нажать
 noBtn.addEventListener('touchstart', (e) => {
   e.preventDefault();
   const t = e.touches[0];
@@ -283,7 +325,7 @@ noBtn.addEventListener('touchstart', (e) => {
   noBtn.style.transform = `translate(${nx}px,${ny}px)`;
 }, { passive:false });
 
-// ===== САЛЮТ =====
+/* ===== САЛЮТ (без изменений по логике) ===== */
 const canvas=document.getElementById('fx');
 const ctx=canvas.getContext('2d');
 
@@ -349,12 +391,12 @@ function tick(){
   }
 }
 
-// ===== КНОПКА ДА =====
+/* ===== КНОПКА ДА ===== */
 yesBtn.onclick=()=>{
   buttons.style.display="none";
 
-  title.textContent="Урааа! 💘 Теперь ты моя валентинка!";
-  title.classList.add('big');
+  titleEl.textContent="Урааа! 💘 Теперь ты моя валентинка!";
+  titleEl.classList.add('big');
 
   msg.textContent="🥰💞🥰";
   msg.classList.add('show');
