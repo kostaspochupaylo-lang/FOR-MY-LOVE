@@ -141,6 +141,17 @@ body{
   cursor:pointer;
 }
 
+/* ✅ ТОЛЬКО ДЛЯ 2 ЭКРАНА: двигаем большое сердце правее */
+#screen2 .heart-wrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+#bigHeart{
+  position:relative;
+  left: 22px; /* <-- тут регулируй: 10..40px */
+}
+
 .heart:before,
 .heart:after{
   content:"";
@@ -283,7 +294,7 @@ h1.big{
       <div class="heart clickable" id="bigHeart" aria-label="Большое сердце"></div>
     </div>
 
-    <h1 class="big" id="title2">Урааа! 💘 Теперь ты моя валентинка!</h1>
+    <h1 class="big" id="title2" style="opacity:1;">Урааа! 💘 Теперь ты моя валентинка!</h1>
     <div class="msg show" id="msg2">🥰💞🥰</div>
     <div class="hint" id="hint2">жмякни на большое сердечко</div>
   </div>
@@ -479,12 +490,10 @@ function showScreen(n){
 }
 
 async function transitionToScreen3(){
-  // крутим открытку "как колесо" и скрываем
   card.classList.remove('spin-in');
   card.classList.add('spin-out');
   await sleep(950);
 
-  // показываем 3-й экран и крутим обратно появлением
   showScreen(3);
   card.classList.remove('spin-out');
   card.classList.add('spin-in');
@@ -528,7 +537,7 @@ function spawnHearts(){
       rot: rand(0, Math.PI*2),
       vr: rand(-0.01, 0.01),
       a: rand(0.35, 0.9),
-      hue: Math.floor(rand(330, 360)) // розово-красные
+      hue: Math.floor(rand(330, 360))
     });
   }
 }
@@ -542,7 +551,6 @@ function drawHeartShape(x,y,size,rot,color,alpha){
 
   const s = size;
   hctx.beginPath();
-  // простое сердечко кривыми
   hctx.moveTo(0, s*0.25);
   hctx.bezierCurveTo(-s*0.8, -s*0.35, -s*0.55, -s*0.95, 0, -s*0.45);
   hctx.bezierCurveTo( s*0.55, -s*0.95,  s*0.8, -s*0.35, 0, s*0.25);
@@ -561,7 +569,6 @@ function tickHearts(){
     p.y += p.vy;
     p.rot += p.vr;
 
-    // зациклим
     if(p.y < -60) p.y = HH + 80;
     if(p.x < -60) p.x = HW + 60;
     if(p.x > HW + 60) p.x = -60;
@@ -589,17 +596,14 @@ function startHearts(){
    Buttons actions
 ========================= */
 yesBtn.onclick = async () => {
-  // screen1 -> screen2
   buttons1.style.display = "none";
 
-  // заменить текст (без печатания, как было)
   title1.textContent = "Урааа! 💘 Теперь ты моя валентинка!";
   title1.classList.add('big');
 
   msg1.textContent = "🥰💞🥰";
   msg1.classList.add('show');
 
-  // салют
   spawnConfetti(1.0);
   setTimeout(()=>spawnConfetti(0.85), 160);
   if(!run){
@@ -607,12 +611,10 @@ yesBtn.onclick = async () => {
     tickConfetti();
   }
 
-  // небольшая пауза и перейти на экран 2 (чтобы было "как второй экран")
   await sleep(350);
   showScreen(2);
 };
 
-// переход на 3 экран по клику на большое сердце на 2 экране
 bigHeart.addEventListener('click', async () => {
   await transitionToScreen3();
   startHearts();
