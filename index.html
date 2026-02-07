@@ -31,7 +31,6 @@ body{
     radial-gradient(900px 700px at 85% 70%, #ffe1f0, transparent 60%),
     linear-gradient(135deg, var(--bg1), var(--bg2));
   overflow:hidden;
-
   animation: bgIn 1400ms ease-out 600ms both;
 }
 
@@ -117,7 +116,6 @@ body{
 /* ====== СЕРДЦЕ ====== */
 .heart-wrap{
   margin-bottom:20px;
-
   opacity:0;
   transform: translateY(-10px) scale(.88);
   animation: popIn 700ms cubic-bezier(.2,.9,.2,1) 1300ms both;
@@ -194,7 +192,6 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
 .buttons{
   display:flex;
   gap:16px;
-
   opacity:0;
   transform: translateY(10px);
   pointer-events:none;
@@ -225,7 +222,7 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
   transition:transform .3s cubic-bezier(.2,.8,.2,1);
 }
 
-/* ====== СООБЩЕНИЕ / ПОДСКАЗКА ====== */
+/* ====== СООБЩЕНИЕ ====== */
 .msg{
   margin-top:16px;
   font-size:30px;
@@ -247,25 +244,28 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
 .hint{
   font-size:14px;
   opacity:0;
-  transform: translateY(10px);
+  transform: translateY(14px);
+  filter: blur(2px);
   pointer-events:none;
 }
 
-/* ✅ 2 экран: основной + мелкий появляются одновременно */
+/* ✅ 2 экран: ПЛАВНОЕ появление текста (без резкого “прыжка”) */
 #screen2 .s2-appear{
   opacity:0;
-  transform: translateY(10px);
+  transform: translateY(14px);
+  filter: blur(2px);
 }
-#screen2.on .s2-appear{
+#screen2.on .s2-appear,
+#screen2.on .hint{
   opacity:1;
   transform: translateY(0);
-  transition: opacity 800ms ease, transform 800ms ease;
+  filter: blur(0);
+  transition:
+    opacity 900ms ease,
+    transform 900ms cubic-bezier(.18,.85,.18,1),
+    filter 900ms ease;
 }
-#screen2.on .hint{
-  opacity:.72;
-  transform: translateY(0);
-  transition: opacity 800ms ease, transform 800ms ease;
-}
+#screen2.on .hint{ opacity:.72; }
 
 /* ====== CANVAS ====== */
 #fx{
@@ -314,10 +314,10 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
       <div class="heart clickable" id="bigHeart" aria-label="Большое сердце"></div>
     </div>
 
-    <h1 class="big s2-appear" id="title2" style="opacity:1;">Урааа! 💘 Теперь ты моя валентинка!</h1>
-    <div class="msg show s2-appear" id="msg2">🥰💞🥰</div>
+    <!-- ❗ без inline opacity и без class="show" — чтобы НЕ было резкого появления -->
+    <h1 class="big s2-appear" id="title2">Урааа! 💘 Теперь ты моя валентинка!</h1>
+    <div class="msg s2-appear" id="msg2">🥰💞🥰</div>
 
-    <!-- ✅ место зарезервировано, ничего не сдвигается -->
     <div class="hint-slot">
       <div class="hint" id="hint2">жмякни на большое сердечко</div>
     </div>
@@ -505,7 +505,6 @@ function tickConfetti(){
   }
 
   ctx.globalAlpha = 1;
-
   requestAnimationFrame(tickConfetti);
 }
 
@@ -519,6 +518,9 @@ function showScreen(n){
 }
 
 async function transitionToScreen3(){
+  // на всякий — чтобы при возвратах не было “включено”
+  screen2.classList.remove('on');
+
   card.classList.remove('spin-in');
   card.classList.add('spin-out');
   await sleep(1650);
@@ -629,7 +631,6 @@ yesBtn.onclick = async () => {
 
   // конфетти: дольше и мягче
   emitConfetti(3500);
-
   if(!run){
     run = true;
     tickConfetti();
@@ -638,8 +639,12 @@ yesBtn.onclick = async () => {
   await sleep(350);
   showScreen(2);
 
-  // ✅ одновременно показать основной + мелкий (и без сдвигов)
-  requestAnimationFrame(() => screen2.classList.add('on'));
+  // ✅ плавно показываем весь контент 2-го экрана
+  screen2.classList.remove('on'); // на всякий случай
+  requestAnimationFrame(() => {
+    // второй кадр — чтобы браузер точно успел применить стартовые стили
+    requestAnimationFrame(() => screen2.classList.add('on'));
+  });
 };
 
 bigHeart.addEventListener('click', async () => {
