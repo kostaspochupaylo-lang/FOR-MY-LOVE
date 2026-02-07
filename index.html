@@ -139,7 +139,6 @@ body{
   animation:pulse 1.2s infinite;
   cursor: default;
 }
-
 .heart.clickable{ cursor:pointer; }
 
 /* ✅ сердце на 2 экране чуть правее */
@@ -170,7 +169,7 @@ body{
   50%{ transform:rotate(45deg) scale(1.06); }
 }
 
-/* ====== ТЕКСТ (печатание) ====== */
+/* ====== ТЕКСТ ====== */
 h1{
   font-size:clamp(26px,3vw,40px);
   margin:0 0 18px;
@@ -236,26 +235,37 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
 }
 .msg.show{ opacity:1; }
 
-.hint{
+/* ✅ фикс: hint появляется без сдвигов (место зарезервировано) */
+.hint-slot{
+  height:22px;               /* резерв под 1 строку */
   margin-top:14px;
-  font-size:14px;
-  opacity:0;
-  transform: translateY(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-/* ✅ 2 экран: hint появляется ровно вместе с основным */
-#screen2 .s2-appear,
-#screen2 .hint{
+.hint{
+  font-size:14px;
+  opacity:0;
+  transform: translateY(10px);
+  pointer-events:none;
+}
+
+/* ✅ 2 экран: основной + мелкий появляются одновременно */
+#screen2 .s2-appear{
   opacity:0;
   transform: translateY(10px);
 }
-#screen2.on .s2-appear,
-#screen2.on .hint{
+#screen2.on .s2-appear{
   opacity:1;
   transform: translateY(0);
   transition: opacity 800ms ease, transform 800ms ease;
 }
-#screen2.on .hint{ opacity:.72; }
+#screen2.on .hint{
+  opacity:.72;
+  transform: translateY(0);
+  transition: opacity 800ms ease, transform 800ms ease;
+}
 
 /* ====== CANVAS ====== */
 #fx{
@@ -306,7 +316,11 @@ h1.big{ font-size:clamp(34px,4.5vw,56px); }
 
     <h1 class="big s2-appear" id="title2" style="opacity:1;">Урааа! 💘 Теперь ты моя валентинка!</h1>
     <div class="msg show s2-appear" id="msg2">🥰💞🥰</div>
-    <div class="hint" id="hint2">жмякни на большое сердечко</div>
+
+    <!-- ✅ место зарезервировано, ничего не сдвигается -->
+    <div class="hint-slot">
+      <div class="hint" id="hint2">жмякни на большое сердечко</div>
+    </div>
   </div>
 
   <!-- SCREEN 3 -->
@@ -451,7 +465,7 @@ function spawnConfettiBurst(mult=1){
       vx:(Math.random()-0.5)*10,
       vy:(Math.random()-1.1)*12,
       g: 0.12 + Math.random()*0.08,
-      l: 420 + Math.random()*220,      // ✅ живут дольше
+      l: 420 + Math.random()*220,
       s: 2 + Math.random()*3,
       c:`hsl(${Math.random()*360},95%,60%)`
     });
@@ -482,7 +496,7 @@ function tickConfetti(){
     p.y  += p.vy;
     p.l--;
 
-    const a = Math.max(0, Math.min(1, p.l/260)); // ✅ мягче затухание
+    const a = Math.max(0, Math.min(1, p.l/260));
     ctx.globalAlpha = a;
     ctx.fillStyle = p.c;
     ctx.fillRect(p.x,p.y,p.s,p.s);
@@ -611,7 +625,6 @@ function startHearts(){
    Buttons actions
 ========================= */
 yesBtn.onclick = async () => {
-  // screen1 -> screen2
   buttons1.style.display = "none";
 
   // конфетти: дольше и мягче
@@ -622,11 +635,10 @@ yesBtn.onclick = async () => {
     tickConfetti();
   }
 
-  // показать экран 2
   await sleep(350);
   showScreen(2);
 
-  // ✅ одновременно показать основной + мелкий
+  // ✅ одновременно показать основной + мелкий (и без сдвигов)
   requestAnimationFrame(() => screen2.classList.add('on'));
 };
 
