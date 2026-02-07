@@ -55,9 +55,9 @@
     }
 
     .card{
-      width:min(720px, 92vw);            /* ✅ больше */
-      min-height:min(560px, 86vh);       /* ✅ выше */
-      padding: 36px 28px 34px;
+      width:min(720px, 92vw);
+      min-height:min(560px, 86vh);
+      padding: 64px 28px 46px; /* ✅ ОПУСТИЛИ КОНТЕНТ ВНИЗ */
       border-radius: 34px;
       background:var(--card);
       box-shadow:var(--shadow);
@@ -92,7 +92,6 @@
       100%{ transform: translateX(45%) rotate(8deg); opacity:.18; }
     }
 
-    /* Большое сердце (оставляем), но центрируем красиво */
     .big-heart-wrap{
       display:grid;
       place-items:center;
@@ -101,7 +100,7 @@
     }
 
     .big-heart{
-      width: 150px;      /* ✅ оставил большим */
+      width: 150px;
       height: 150px;
       background: var(--accent);
       transform: rotate(45deg);
@@ -127,7 +126,6 @@
       50%{ transform: rotate(45deg) scale(1.06); }
     }
 
-    /* Вопрос/заголовок */
     .question{
       transition: opacity .35s ease, transform .35s ease, max-height .35s ease;
     }
@@ -146,11 +144,10 @@
       transition: font-size .35s ease, transform .35s ease, opacity .35s ease;
     }
     h1.big{
-      font-size: clamp(34px, 4.8vw, 56px); /* ✅ явно больше */
+      font-size: clamp(34px, 4.8vw, 56px);
       margin: 18px 0 10px;
     }
 
-    /* Кнопки — flex, чтобы НЕ налезали */
     .arena{
       margin: 22px auto 0;
       width: min(520px, 92%);
@@ -188,7 +185,6 @@
       color:#053c35;
     }
 
-    /* "Нет" будет двигаться ПЛАВНО через transform */
     #no{
       background:#ff5a7d;
       color:#fff;
@@ -247,7 +243,6 @@
     const title = document.getElementById('title');
     const msg = document.getElementById('msg');
 
-    // текущий сдвиг кнопки "Нет"
     let nx = 0, ny = 0;
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
@@ -256,27 +251,22 @@
       const a = arena.getBoundingClientRect();
       const b = noBtn.getBoundingClientRect();
 
-      // курсор в координатах арены
       const px = clientX - a.left;
       const py = clientY - a.top;
 
-      // текущий центр "Нет"
       const cx = (b.left - a.left) + b.width/2;
       const cy = (b.top  - a.top ) + b.height/2;
 
-      // направление от курсора
       let dx = cx - px;
       let dy = cy - py;
 
       const len = Math.hypot(dx, dy) || 1;
       dx /= len; dy /= len;
 
-      // небольшой шаг — чтобы это выглядело как "убегает", а не телепорт
       const step = 90;
       nx += dx * step;
       ny += dy * step;
 
-      // ограничим, чтобы кнопка не улетала далеко за пределы
       const maxX = a.width * 0.45;
       const maxY = a.height * 0.35;
       nx = clamp(nx, -maxX, maxX);
@@ -285,7 +275,6 @@
       noBtn.style.transform = `translate(${nx}px, ${ny}px)`;
     }
 
-    // срабатываем только когда курсор близко
     let raf = 0;
     arena.addEventListener('mousemove', (e) => {
       const b = noBtn.getBoundingClientRect();
@@ -296,7 +285,6 @@
       raf = requestAnimationFrame(() => moveNoSmoothAwayFrom(e.clientX, e.clientY));
     }, { passive:true });
 
-    // мобилка — убегаем при попытке тапнуть
     noBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       const t = e.touches[0];
@@ -305,7 +293,6 @@
 
     noBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      // даже если кликнул — пусть "убегает"
       const a = arena.getBoundingClientRect();
       moveNoSmoothAwayFrom(a.left + a.width/2, a.top + a.height/2);
     });
@@ -333,7 +320,7 @@
     function hsl(h,s,l){ return `hsl(${h} ${s}% ${l}%)`; }
 
     function spawnBurst(mult=1){
-      const count = Math.floor(380 * mult); // ✅ пышнее
+      const count = Math.floor(380 * mult);
       const originX = W/2;
       const originY = Math.min(H*0.34, 260);
 
@@ -427,22 +414,18 @@
 
     // ---------- Нажали "Да" ----------
     yesBtn.addEventListener('click', () => {
-      // убираем вопрос + кнопки
       question.classList.add('hide');
       arena.classList.add('hide');
 
-      // делаем большой тайтл
       title.textContent = "Урааа! 💘 Теперь ты моя валентинка!";
       title.classList.add('big');
 
-      // показать обратно (уже как “финальный” заголовок)
       setTimeout(() => {
         question.classList.remove('hide');
         msg.textContent = "🥰💞🥰";
         msg.classList.add('big','show');
       }, 260);
 
-      // салют (две волны)
       spawnBurst(1.0);
       setTimeout(() => spawnBurst(0.9), 170);
 
